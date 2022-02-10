@@ -148,4 +148,18 @@ package LiFxUtility
     }
     return ((%t << 18) | (%y << 9)) | %x;
   }
+  
+  /*
+  * Loops the root Client list for specific pid and sends message to each client
+  * @param channel int representing channel to send message over
+  * @param message text message to send to the players
+  */
+  function LiFxUtility::messageAll(%channel, %message)
+  {
+    for(%id = 0; %id < ClientGroup.getCount(); %id++)
+    {
+      %client = ClientGroup.getObject(%id);
+      %client.cmSendClientMessage(%channel, %message);
+    }
+  }
 };
