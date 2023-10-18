@@ -162,4 +162,183 @@ package LiFxUtility
       %client.cmSendClientMessage(%channel, %message);
     }
   }
+  function LiFxUtility::fromGeoID(%geoid) {
+    if(isObject(LiFxCoordinates))
+    {
+      LiFxCoordinates.delete();
+    }
+    new ScriptObject (LiFxCoordinates) {
+      geoid = $NULL;
+      position = $NULL;
+    };
+    LiFxCoordinates.geoid = %geoid;
+    LiFxCoordinates.position = LiFxUtility::getPositionFromGeoID(%geoid);
+  }
+  
+  function LiFxUtility::fromPosition(%position) {
+    if(isObject(LiFxCoordinates))
+    {
+      LiFxCoordinates.delete();
+    }
+    new ScriptObject (LiFxCoordinates) {
+      geoid = $NULL;
+      position = $NULL;
+    };
+    LiFxCoordinates.geoid = LiFxUtility::getGeoID(%position);
+    LiFxCoordinates.position = %position;
+  }
+  function LiFxUtility::NorthEast(%this) {
+    return VectorAdd(LiFxCoordinates.position, "1 0 0");
+  }
+  function LiFxUtility::NorthWest(%this) {
+    return VectorAdd(LiFxCoordinates.position, "1 1 0");
+  }
+  function LiFxUtility::SouthEast(%this) {
+    return LiFxCoordinates.position;
+    
+  }
+  function LiFxUtility::SouthWest(%this) {
+    return VectorAdd(LiFxCoordinates.position, "0 1 0");
+  }
+  function LiFxUtility::Center(%this) {
+    return VectorAdd(LiFxCoordinates.position, "0.5 0.5 0");
+    
+  }
+
+  function LiFxUtility::getGeoID(%position) {
+    %z = nextToken(nextToken(%position, "x", " "), "y", " ");
+    if (%x < -1024)
+    {
+        %x = mFloor((3064 + %x) * 0.25);
+        if (%y < -1024)
+        {
+            
+            %y = mFloor((3064 + %y) * 0.25);
+            %t = 442;
+        }
+        else
+        {
+            if (%y < 1020)
+            {
+                %y = mFloor((1020 + %y) * 0.25);
+                %t = 445;
+            }
+            else
+            {
+                %y = mFloor((%y - 1024) * 0.25);
+                %t = 448;
+            }
+        }
+    }
+    else
+    {
+        if (%x < 1020)
+        {
+            %x = mFloor((1020 + %x) * 0.25);
+            if (%y < -1024)
+            {
+                %y = mFloor((3064 + %y) * 0.25);
+                %t = 443;
+            }
+            else
+            {
+                if (%y < 1020)
+                {
+                    %y = mFloor((1020 + %y) * 0.25);
+                    %t = 446;
+                }
+                else
+                {
+                    %y = mFloor((%y - 1024) * 0.25);
+                    %t = 449;
+                }
+            }
+        }
+        else
+        {
+            %x = mFloor((%x - 1024) * 0.25);
+            if (%y < -1024)
+            {
+                %y = mFloor((3064 + %y) * 0.25);
+                %t = 444;
+            }
+            else
+            {
+                if (%y < 1020)
+                {
+                    %y = mFloor((1020 + %y) * 0.25);
+                    %t = 447;
+                }
+                else
+                {
+                    %y = mFloor((%y - 1024) * 0.25);
+                    %t = 450;
+                }
+            }
+        }
+    }
+    return ((%t << 18) | (%y << 9)) | %x;
+  }
+  function LiFxUtility::getPositionFromGeoID(%geoID) {
+    %t = %geoID >> 18;
+    %y = (%geoID >> 9) & 511;
+    %x = %geoID & 511;
+
+    if (%t >= 442 && %t <= 450) {
+        %tOffset = %t - 442;
+        %yOffset = %y * 4;
+        %xOffset = %x * 4;
+
+        switch(%t)
+        {
+          case 442:
+            %xPosition = %xOffset - 3064; 
+            %yPosition = %yOffset - 3064; 
+          case 443:
+            %xPosition = %xOffset - 1020; 
+            %yPosition = %yOffset - 3064; 
+          case 444:
+            %xPosition = %xOffset + 1024; 
+            %yPosition = %yOffset - 3064; 
+          case 445:
+            %xPosition = %xOffset - 3064; 
+            %yPosition = %yOffset - 1020; 
+          case 446:
+            %xPosition = %xOffset - 1020; 
+            %yPosition = %yOffset - 1020; 
+          case 447:
+            %xPosition = %xOffset + 1024; 
+            %yPosition = %yOffset - 1020; 
+          case 448:
+            %xPosition = %xOffset - 3064; 
+            %yPosition = %yOffset + 1024; 
+          case 449:
+            %xPosition = %xOffset - 1020; 
+            %yPosition = %yOffset + 1024; 
+          case 450:
+            %xPosition = %xOffset + 1024;
+            %yPosition = %yOffset + 1024;
+        }
+        %startPoint = %xPosition SPC %yPosition SPC 1500; // Start the raycast at a high point above the terrain
+        %endPoint = %xPosition SPC %yPosition SPC -1500;   // Extend the raycast downward
+        %rayMask =  1 << 2;
+        %rayResult = containerRayCast(%startPoint, %endPoint, %rayMask);
+        if (%rayResult) {
+            %hitPoint = getWords(%rayResult, 1, 3); // Get the point of intersection
+            %zPosition = getWord(%hitPoint, 2);     // Get the Z position (height) of the terrain
+        } else {
+            // No intersection, handle accordingly
+            %xPosition = -1;
+            %yPosition = -1;
+            %zPosition = -1;
+        }
+    } else {
+        // Handle invalid GeoID or undefined t values
+        %xPosition = -1;
+        %yPosition = -1;
+        %zPosition = -1;
+    }
+
+    return %xPosition SPC %yPosition SPC %zPosition;
+  }
 };
