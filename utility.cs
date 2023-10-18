@@ -174,6 +174,24 @@ package LiFxUtility
     LiFxCoordinates.geoid = %geoid;
     LiFxCoordinates.position = LiFxUtility::getPositionFromGeoID(%geoid);
   }
+
+  function LiFxUtility::getTerrainHeightVector(%position) {
+        %pos = getWords(%position, 0,1);
+        %y = nextToken(%pos, "x", " ");
+        %startPoint = %x SPC %y SPC 1500; // Start the raycast at a high point above the terrain
+        %endPoint = %x SPC %y SPC -1500;   // Extend the raycast downward
+        %rayMask =  1 << 2;
+        %rayResult = containerRayCast(%startPoint, %endPoint, %rayMask);
+        if (%rayResult) {
+          
+          %hitPoint = getWords(%rayResult, 1, 3); // Get the point of intersection
+          %zPosition = getWord(%hitPoint, 2);     // Get the Z position (height) of the terrain
+          return %x SPC %y SPC %zPosition;
+        }
+        else {
+          return "-1 -1 -1";
+        }
+  }
   
   function LiFxUtility::fromPosition(%position) {
     if(isObject(LiFxCoordinates))
