@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "ServerUtility",
+  "name": "LiFx ServerUtility",
+  "version": "2.4.0",
+  "description": "Shared LiFxUtility TorqueScript helper library for the LiFx ServerAutoloader; the framework vendors this repository as a git submodule and already bundles utility.cs inside its art.zip release.",
+  "authors": ["Christophe Roblin", "lif-x community"],
+  "source": { "repo": "LiF-x/ServerUtility", "commit": "6aae18d023d42b3a3af49bd1f292e572dd0a66b3" },
+  "baseline": { "gameBuild": "sha256:d47ef6156423f1226b6d07a1f31f81d3aa94bc460cc1ac76bcf7d7ef9c305d4a", "steamBuildId": "11261643" },
+  "license": "GPL-3.0-only",
+  "distribution": "hostable",
+  "dependencies": ["LiF-x/ServerAutoloader"],
+  "loadOrderHint": 50,
+  "loadOrderNote": "Framework-adjacent library: it defines the LiFxUtility package that ServerAutoloader's main.cs execs and activates, so it must be in place before any behavioural mod at 100.",
+  "files": {
+    "overlay": [
+      { "src": "utility.cs", "dest": "utility.cs" }
+    ],
+    "dataPatches": []
+  }
+}
